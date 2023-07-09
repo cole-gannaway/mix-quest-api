@@ -1,21 +1,11 @@
 package com.mixquest.mixquestapi.model;
 
-import jakarta.persistence.*;
-
+import java.io.Serializable;
 import java.util.Objects;
 
-@Entity
-@IdClass(SongRequestId.class)
-@Table(name = "songrequests")
-public class SongRequest {
-    @Id
-    @Column(name="songUUID", nullable = false, unique = false)
+public class SongRequestId implements Serializable {
     public String songUUID;
-    @Id
-    @Column(name="username", nullable = false, unique = false)
     public String username;
-    @Id
-    @Column(name="lobbyUUID", nullable = false, unique = false)
     public String lobbyUUID;
 
     public String getSongUUID() {
@@ -26,22 +16,38 @@ public class SongRequest {
         this.songUUID = songUUID;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getLobbyUUID() {
+        return lobbyUUID;
+    }
+
+    public void setLobbyUUID(String lobbyUUID) {
+        this.lobbyUUID = lobbyUUID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SongRequest request = (SongRequest) o;
-        return Objects.equals(getSongUUID(), request.getSongUUID()) && Objects.equals(username, request.username) && Objects.equals(lobbyUUID, request.lobbyUUID);
+        SongRequestId that = (SongRequestId) o;
+        return Objects.equals(getSongUUID(), that.getSongUUID()) && Objects.equals(getUsername(), that.getUsername()) && Objects.equals(getLobbyUUID(), that.getLobbyUUID());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSongUUID(), username, lobbyUUID);
+        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID());
     }
 
     @Override
     public String toString() {
-        return "SongRequest{" +
+        return "SongRequestId{" +
                 "songUUID='" + songUUID + '\'' +
                 ", username='" + username + '\'' +
                 ", lobbyUUID='" + lobbyUUID + '\'' +
