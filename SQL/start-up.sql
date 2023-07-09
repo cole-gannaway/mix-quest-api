@@ -43,6 +43,19 @@ CREATE TABLE chats (
   timeMillis BIGINT NOT NULL
 );
 
+CREATE TABLE songrequests (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  songUUID VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  lobbyUUID VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE songrequestsdislikes (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  songUUID VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  lobbyUUID VARCHAR(255) NOT NULL
+);
 
 INSERT INTO users (id, email, firstName, lastName) VALUES
   (1, "user1@example.com", "user-1", "lastName-1"),

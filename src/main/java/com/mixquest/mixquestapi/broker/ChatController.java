@@ -1,7 +1,8 @@
 package com.mixquest.mixquestapi.broker;
 
-import com.mixquest.mixquestapi.model.ChatMessage;
-import com.mixquest.mixquestapi.repository.ChatRepository;
+import com.mixquest.mixquestapi.model.SongRequest;
+import com.mixquest.mixquestapi.repository.SongRequestDislikesRepository;
+import com.mixquest.mixquestapi.repository.SongRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -14,15 +15,19 @@ import org.springframework.stereotype.Controller;
 @Description("Listens to RabbitMQ routes")
 public class ChatController {
     @Autowired
-    private ChatRepository chatRepository;
+    private SongRequestRepository songRequestRepository;
 
-    @MessageMapping("/messages/{lobbyId}")
-    @SendTo("/topic/messages.{lobbyId}")
+    @Autowired
+    private SongRequestDislikesRepository songRequestDislikesRepository;
+
+    @MessageMapping("/songs/{lobbyId}")
+    @SendTo("/topic/songs.{lobbyId}")
     /**
      * Receives all messages and stores it to the database. Then it broadcasts the message to all other clients in that lobby
      */
-    public ChatMessage handleReceiveMessage(@Payload ChatMessage message, @DestinationVariable String lobbyId) {
-        chatRepository.save(message);
+    public SongRequest handleReceiveSongRequest(@Payload SongRequest message, @DestinationVariable String lobbyId) {
+        System.out.println(message.toString());
+        songRequestRepository.save(message);
         return message;
     }
 }
