@@ -33,4 +33,10 @@ public class ParticipantRepository {
     public void setActiveSessions(Map<String, LoginEvent> activeSessions) {
         this.activeSessions = activeSessions;
     }
+
+    public Long getSessionCountForLobby(final String lobbyUUID){
+        return activeSessions.values().stream().filter(val -> {
+            return val.getLobbyUUID().equals(lobbyUUID);
+        }).count();
+    }
 }

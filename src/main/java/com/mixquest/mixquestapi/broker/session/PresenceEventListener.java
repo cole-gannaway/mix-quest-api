@@ -20,10 +20,6 @@ public class PresenceEventListener {
 
     private SimpMessagingTemplate messagingTemplate;
 
-    private String loginDestination;
-
-    private String logoutDestination;
-
     public PresenceEventListener(SimpMessagingTemplate messagingTemplate, ParticipantRepository participantRepository) {
         this.messagingTemplate = messagingTemplate;
         this.participantRepository = participantRepository;
@@ -38,13 +34,15 @@ public class PresenceEventListener {
         List<String> lobbyUUIDList = ((LinkedMultiValueMap) nativeHeaders).get("lobbyUUID");
         String lobbyUUID = lobbyUUIDList.get(0);
         LoginEvent loginEvent = new LoginEvent(username, lobbyUUID);
-        String topic = loginDestination + "." + lobbyUUID;
-        messagingTemplate.convertAndSend(topic, participantRepository.getActiveSessions().size() + 1);
 
         logger.info("User: " + username + " logged in to lobbyUUID: " + lobbyUUID);
 
         // We store the session as we need to be idempotent in the disconnect event processing
         participantRepository.add(headers.getSessionId(), loginEvent);
+
+        // Send via STOMP
+        String topic = "/topic/users." + lobbyUUID;
+        messagingTemplate.convertAndSend(topic, participantRepository.getSessionCountForLobby(lobbyUUID));
     }
 
     @EventListener
@@ -52,22 +50,18 @@ public class PresenceEventListener {
         LoginEvent participant = participantRepository.getParticipant(event.getSessionId());
         String username = participant.getUsername();
         String lobbyUUID = participant.getLobbyUUID();
-        String topic = logoutDestination + "." + lobbyUUID;
+        String topic = "/topic/users." + lobbyUUID;
 
         logger.info("User: " + username + " logging out of to lobbyUUID: " + lobbyUUID);
 
         Optional.ofNullable(participant)
                 .ifPresent(login -> {
-                    messagingTemplate.convertAndSend(topic, participantRepository.getActiveSessions().size() - 1);
                     participantRepository.removeParticipant(event.getSessionId());
+                    messagingTemplate.convertAndSend(topic, participantRepository.getSessionCountForLobby(lobbyUUID));
                 });
     }
 
-    public void setLoginDestination(String loginDestination) {
-        this.loginDestination = loginDestination;
-    }
 
-    public void setLogoutDestination(String logoutDestination) {
-        this.logoutDestination = logoutDestination;
-    }
+
+
 }
