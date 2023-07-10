@@ -16,8 +16,6 @@ public class MixQuestApiApplication {
 	@Description("Tracks user presence (join / leave) and broacasts it to all connected users")
 	public PresenceEventListener presenceEventListener(SimpMessagingTemplate messagingTemplate) {
 		PresenceEventListener presence = new PresenceEventListener(messagingTemplate, participantRepository());
-		presence.setLoginDestination("/topic/users");
-		presence.setLogoutDestination("/topic/users");
 		return presence;
 	}
 

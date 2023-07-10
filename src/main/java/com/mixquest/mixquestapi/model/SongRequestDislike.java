@@ -18,12 +18,6 @@ public class SongRequestDislike {
     @Column(name="lobbyUUID", nullable = false, unique = false)
     public String lobbyUUID;
 
-    public SongRequestDislike(String songUUID, String username, String lobbyUUID) {
-        this.songUUID = songUUID;
-        this.username = username;
-        this.lobbyUUID = lobbyUUID;
-    }
-
     public String getSongUUID() {
         return songUUID;
     }
@@ -32,17 +26,33 @@ public class SongRequestDislike {
         this.songUUID = songUUID;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getLobbyUUID() {
+        return lobbyUUID;
+    }
+
+    public void setLobbyUUID(String lobbyUUID) {
+        this.lobbyUUID = lobbyUUID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SongRequestDislike that = (SongRequestDislike) o;
-        return Objects.equals(getSongUUID(), that.getSongUUID()) && Objects.equals(username, that.username) && Objects.equals(lobbyUUID, that.lobbyUUID);
+        return Objects.equals(getSongUUID(), that.getSongUUID()) && Objects.equals(getUsername(), that.getUsername()) && Objects.equals(getLobbyUUID(), that.getLobbyUUID());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSongUUID(), username, lobbyUUID);
+        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID());
     }
 
     @Override

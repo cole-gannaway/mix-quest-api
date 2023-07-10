@@ -62,6 +62,11 @@ SELECT lobbyUUID, songUUID, COUNT(songUUID) AS songCount
 FROM songrequests
 GROUP BY lobbyUUID, songUUID;
 
+CREATE VIEW song_requests_dislikes_count_by_lobby AS
+SELECT lobbyUUID, songUUID, COUNT(songUUID) AS songCount
+FROM songrequestsdislikes
+GROUP BY lobbyUUID, songUUID;
+
 
 INSERT INTO users (id, email, firstName, lastName) VALUES
   (1, "user1@example.com", "user-1", "lastName-1"),

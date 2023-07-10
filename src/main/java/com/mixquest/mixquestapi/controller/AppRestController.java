@@ -1,61 +1,81 @@
 package com.mixquest.mixquestapi.controller;
 
-import com.mixquest.mixquestapi.model.ChatMessage;
+import com.mixquest.mixquestapi.broker.model.LoginEvent;
+import com.mixquest.mixquestapi.broker.session.PresenceEventListener;
+import com.mixquest.mixquestapi.model.*;
 import com.mixquest.mixquestapi.broker.session.ParticipantRepository;
 
-import com.mixquest.mixquestapi.model.SongRequestCountByLobby;
-import com.mixquest.mixquestapi.model.SongRequestCountByLobbyId;
-import com.mixquest.mixquestapi.model.User;
-import com.mixquest.mixquestapi.repository.ChatRepository;
-import com.mixquest.mixquestapi.repository.SongRequestCountByLobbyRepository;
-import com.mixquest.mixquestapi.repository.UserRepository;
+import com.mixquest.mixquestapi.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.PUT})
 public class AppRestController {
+    Logger logger = LoggerFactory.getLogger(AppRestController.class);
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ChatRepository chatRepository;
     @Autowired
     private ParticipantRepository participantRepository;
+
+    @Autowired
+    private SongRequestRepository songRequestRepository;
+    @Autowired
+    private SongRequestDislikesRepository songRequestDislikesRepository;
     @Autowired
     private SongRequestCountByLobbyRepository songRequestCountByLobbyRepository;
-    @GetMapping("/getMessages")
-    @CrossOrigin(origins = "*")
-    public List<ChatMessage> getMessages() {
-        List<ChatMessage> result = chatRepository.findAll();
-        return result;
+    @Autowired
+    private SongRequestDislikeCountByLobbyRepository songRequestDislikeCountByLobbyRepository;
+    private SimpMessagingTemplate messagingTemplate;
+
+    public AppRestController(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
     }
 
-    @GetMapping("/getUsers")
-    @CrossOrigin(origins = "*")
-    public List<User> getUsers(){
-        List<User> result = userRepository.findAll();
-        return result;
+    @PutMapping("/addSongRequest")
+    public Boolean addSongRequest(@RequestBody SongRequestMessage message){
+        logger.info("Received addSongRequest for " + message);
+        songRequestRepository.save(SongRequestAdapter.convertToSongRequest(message));
+        // send update to front end
+        messagingTemplate.convertAndSend(
+                "/topic/song_request." + message.getLobbyUUID(),
+                songRequestCountByLobbyRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
+        );
+        return true;
     }
 
-
-    @CrossOrigin(origins = "*")
-    @GetMapping("/getSessions")
-    public Integer printSessions(){
-        return participantRepository.getActiveSessions().size();
+    @PutMapping("/addSongRequestDislike")
+    public Boolean addSongRequestDislike(@RequestBody SongRequestMessage message){
+        logger.info("Received addSongRequestDislike for " + message);
+        songRequestDislikesRepository.save(SongRequestAdapter.convertToSongRequestDislike(message));
+        // send update to front end
+        messagingTemplate.convertAndSend(
+                "/topic/song_request_dislike." + message.getLobbyUUID(),
+                songRequestDislikeCountByLobbyRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
+        );
+        return true;
     }
 
-    @CrossOrigin(origins = "*")
+    @GetMapping("/getSessions/{lobbyUUID}")
+    public Long getSessions(@PathVariable final String lobbyUUID){
+        logger.info("Received getSessions for lobbyUUID: " + lobbyUUID);
+        return participantRepository.getSessionCountForLobby(lobbyUUID);
+    }
+
     @GetMapping("/getSongRequestsByLobby/{lobbyUUID}")
     public List<SongRequestCountByLobby> getSongRequestsByLobby(@PathVariable String lobbyUUID){
-        return songRequestCountByLobbyRepository.findAllSongRequestCountByLobbyId(lobbyUUID);
+        logger.info("Received getSongRequestsByLobby for lobbyUUID: " + lobbyUUID);
+        return songRequestCountByLobbyRepository.findSongRequestsCountByLobbyUUID(lobbyUUID);
     }
-
+    @GetMapping("/getSongRequestDislikesByLobby/{lobbyUUID}")
+    public List<SongRequestCountByLobby> getSongRequestDislikesByLobby(@PathVariable String lobbyUUID){
+        logger.info("Received getSongRequestsByLobby for lobbyUUID: " + lobbyUUID);
+        return songRequestDislikeCountByLobbyRepository.findSongRequestsCountByLobbyUUID(lobbyUUID);
+    }
 }
 
