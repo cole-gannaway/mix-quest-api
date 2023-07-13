@@ -7,6 +7,7 @@ public class SongRequestId implements Serializable {
     public String songUUID;
     public String username;
     public String lobbyUUID;
+    public Boolean isLike;
 
     public String getSongUUID() {
         return songUUID;
@@ -32,17 +33,25 @@ public class SongRequestId implements Serializable {
         this.lobbyUUID = lobbyUUID;
     }
 
+    public Boolean getLike() {
+        return isLike;
+    }
+
+    public void setLike(Boolean like) {
+        isLike = like;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SongRequestId that = (SongRequestId) o;
-        return Objects.equals(getSongUUID(), that.getSongUUID()) && Objects.equals(getUsername(), that.getUsername()) && Objects.equals(getLobbyUUID(), that.getLobbyUUID());
+        return Objects.equals(getSongUUID(), that.getSongUUID()) && Objects.equals(getUsername(), that.getUsername()) && Objects.equals(getLobbyUUID(), that.getLobbyUUID()) && Objects.equals(isLike, that.isLike);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID());
+        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID(), isLike);
     }
 
     @Override
@@ -51,6 +60,7 @@ public class SongRequestId implements Serializable {
                 "songUUID='" + songUUID + '\'' +
                 ", username='" + username + '\'' +
                 ", lobbyUUID='" + lobbyUUID + '\'' +
+                ", isLike=" + isLike +
                 '}';
     }
 }
