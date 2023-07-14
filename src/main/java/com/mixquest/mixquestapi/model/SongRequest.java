@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @Entity
 @IdClass(SongRequestId.class)
-@Table(name = "songrequests")
+@Table(name = "song_requests")
 public class SongRequest {
     @Id
     @Column(name="songUUID", nullable = false, unique = false)
@@ -17,6 +17,9 @@ public class SongRequest {
     @Id
     @Column(name="lobbyUUID", nullable = false, unique = false)
     public String lobbyUUID;
+    @Id
+    @Column(name="isLike", nullable = false, unique = false)
+    public Boolean isLike;
 
     public String getSongUUID() {
         return songUUID;
@@ -42,17 +45,25 @@ public class SongRequest {
         this.lobbyUUID = lobbyUUID;
     }
 
+    public Boolean getLike() {
+        return isLike;
+    }
+
+    public void setLike(Boolean like) {
+        isLike = like;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SongRequest request = (SongRequest) o;
-        return Objects.equals(getSongUUID(), request.getSongUUID()) && Objects.equals(getUsername(), request.getUsername()) && Objects.equals(getLobbyUUID(), request.getLobbyUUID());
+        return Objects.equals(getSongUUID(), request.getSongUUID()) && Objects.equals(getUsername(), request.getUsername()) && Objects.equals(getLobbyUUID(), request.getLobbyUUID()) && Objects.equals(isLike, request.isLike);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID());
+        return Objects.hash(getSongUUID(), getUsername(), getLobbyUUID(), isLike);
     }
 
     @Override
@@ -61,6 +72,7 @@ public class SongRequest {
                 "songUUID='" + songUUID + '\'' +
                 ", username='" + username + '\'' +
                 ", lobbyUUID='" + lobbyUUID + '\'' +
+                ", isLike=" + isLike +
                 '}';
     }
 }

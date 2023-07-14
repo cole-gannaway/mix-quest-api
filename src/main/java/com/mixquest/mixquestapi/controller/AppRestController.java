@@ -1,7 +1,5 @@
 package com.mixquest.mixquestapi.controller;
 
-import com.mixquest.mixquestapi.broker.model.LoginEvent;
-import com.mixquest.mixquestapi.broker.session.PresenceEventListener;
 import com.mixquest.mixquestapi.model.*;
 import com.mixquest.mixquestapi.broker.session.ParticipantRepository;
 
@@ -9,10 +7,10 @@ import com.mixquest.mixquestapi.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Description;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -26,11 +24,8 @@ public class AppRestController {
     @Autowired
     private SongRequestRepository songRequestRepository;
     @Autowired
-    private SongRequestDislikesRepository songRequestDislikesRepository;
+    private SongRequestCombinedRepository songRequestCombinedRepository;
     @Autowired
-    private SongRequestCountByLobbyRepository songRequestCountByLobbyRepository;
-    @Autowired
-    private SongRequestDislikeCountByLobbyRepository songRequestDislikeCountByLobbyRepository;
     private SimpMessagingTemplate messagingTemplate;
 
     public AppRestController(SimpMessagingTemplate messagingTemplate) {
@@ -38,25 +33,25 @@ public class AppRestController {
     }
 
     @PutMapping("/addSongRequest")
-    public Boolean addSongRequest(@RequestBody SongRequestMessage message){
+    public Boolean addSongRequest(@RequestBody SongRequest message){
         logger.info("Received addSongRequest for " + message);
-        songRequestRepository.save(SongRequestAdapter.convertToSongRequest(message));
+        songRequestRepository.save(message);
         // send update to front end
         messagingTemplate.convertAndSend(
-                "/topic/song_request." + message.getLobbyUUID(),
-                songRequestCountByLobbyRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
+                "/topic/song_request_update." + message.getLobbyUUID(),
+                songRequestCombinedRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
         );
         return true;
     }
 
     @PutMapping("/addSongRequestDislike")
-    public Boolean addSongRequestDislike(@RequestBody SongRequestMessage message){
+    public Boolean addSongRequestDislike(@RequestBody SongRequest message){
         logger.info("Received addSongRequestDislike for " + message);
-        songRequestDislikesRepository.save(SongRequestAdapter.convertToSongRequestDislike(message));
+        songRequestRepository.save(message);
         // send update to front end
         messagingTemplate.convertAndSend(
-                "/topic/song_request_dislike." + message.getLobbyUUID(),
-                songRequestDislikeCountByLobbyRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
+                "/topic/song_request_update." + message.getLobbyUUID(),
+                songRequestCombinedRepository.findSongRequestsCountByLobbyUUIDAndSongUUID(message.getLobbyUUID(),message.getSongUUID())
         );
         return true;
     }
@@ -68,14 +63,16 @@ public class AppRestController {
     }
 
     @GetMapping("/getSongRequestsByLobby/{lobbyUUID}")
-    public List<SongRequestCountByLobby> getSongRequestsByLobby(@PathVariable String lobbyUUID){
+    @Description("Get song request data from the lobby on initializing the front end")
+    public List<SongRequestCombined> getSongRequestsByLobby(@PathVariable String lobbyUUID){
         logger.info("Received getSongRequestsByLobby for lobbyUUID: " + lobbyUUID);
-        return songRequestCountByLobbyRepository.findSongRequestsCountByLobbyUUID(lobbyUUID);
+        return songRequestCombinedRepository.findTop25SongRequestsCountByLobbyUUID(lobbyUUID);
     }
-    @GetMapping("/getSongRequestDislikesByLobby/{lobbyUUID}")
-    public List<SongRequestCountByLobby> getSongRequestDislikesByLobby(@PathVariable String lobbyUUID){
-        logger.info("Received getSongRequestsByLobby for lobbyUUID: " + lobbyUUID);
-        return songRequestDislikeCountByLobbyRepository.findSongRequestsCountByLobbyUUID(lobbyUUID);
+    @PostMapping("/getSongRequestsByLobbyPagination")
+    @Description("Paginate through the data 25 at a time")
+    public List<SongRequestCombined> getSongRequestsByLobbyPagination(@RequestBody SongRequestCursorMessage message){
+        logger.info("Received getSongRequestsByLobby for lobbyUUID: " + message.getLobbyUUID());
+        return songRequestCombinedRepository.findNextPageTop25SongRequestsCountByLobbyUUID(message.getLobbyUUID(), message.getSongCount(), message.getSongUUID());
     }
 }
 
